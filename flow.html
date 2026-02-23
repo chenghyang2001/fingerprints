@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>指紋採集系統完整流程圖</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.6rem;
+      margin-bottom: 0.4rem;
+      color: #1e40af;
+    }
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    .diagram-wrap {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      padding: 2rem;
+      overflow-x: auto;
+    }
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+    }
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>指紋採集系統完整流程圖</h1>
+<p class="subtitle">FingerprintJS V4 多層次指紋採集 &amp; 相似度比對系統</p>
+
+<div class="diagram-wrap">
+  <div class="mermaid">
+flowchart TD
+    classDef frontend  fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+    classDef backend   fill:#dcfce7,stroke:#22c55e,color:#14532d
+    classDef db        fill:#fef9c3,stroke:#eab308,color:#713f12
+    classDef algo      fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+
+    subgraph INIT["① 頁面載入"]
+        direction TB
+        A1([使用者開啟頁面]) --> A2[initClientId\n從 localStorage 取得或生成 ID]
+        A2 --> A3[loadFingerprintJS\n載入 FingerprintJS V4]
+        A3 --> A4[initCanvasFingerprint\n預先繪製 Canvas]
+        A4 --> A5["GET /api/auth/me\n確認登入狀態"]
+        A5 --> A6{已登入?}
+        A6 -->|是| A7[顯示已登入 UI]
+        A6 -->|否| A8[顯示訪客 UI]
+    end
+
+    subgraph COLLECT["② 採集多重指紋（前端 app.js）"]
+        direction TB
+        B1([點擊「開始採集」]) --> B2[顯示隱私同意視窗]
+        B2 --> B3{用戶同意?}
+        B3 -->|否| B99([結束])
+        B3 -->|是| B4[collectMultiFingerprint]
+        B4 --> B5["FingerprintJS V4\nvisitorId + components"]
+        B4 --> B6["Canvas 指紋\ntoDataURL()"]
+        B4 --> B7["WebGL 指紋\nGPU renderer/vendor"]
+        B4 --> B8["音訊指紋\nAudioContext"]
+        B4 --> B9["字體指紋\n字體存在測試"]
+        B4 --> B10["插件指紋\n瀏覽器插件列表"]
+        B4 --> B11["硬體指紋\nCPU/記憶體/觸控"]
+        B4 --> B12["自訂指紋\n螢幕/時區/語言"]
+        B5 & B6 & B7 & B8 & B9 & B10 & B11 & B12 --> B13[更新 UI 顯示結果]
+        B13 --> B14["POST /api/fingerprint\n打包所有指紋資料送出"]
+    end
+
+    subgraph BACKEND["③ 後端處理（server.js）"]
+        direction TB
+        C1(["POST /api/fingerprint\n收到請求"]) --> C2{req.session.userId\n存在?}
+
+        C2 -->|已登入| C3["handleLoggedInUserFingerprint()"]
+        C3 --> C4[("查詢 DB\n該 userId 是否有指紋?")]
+        C4 --> C5{已有指紋記錄?}
+        C5 -->|有| C6["calculateMultiFingerprintSimilarity()\n計算新舊指紋相似度"]
+        C6 --> C7[("UPDATE fingerprints\n更新指紋記錄")]
+        C7 --> C8["回傳\n{ similarity, fingerprintChanged,\nisLoggedIn: true }"]
+        C5 -->|無| C9[("INSERT INTO fingerprints\nlinked_user_id = userId")]
+        C9 --> C10["回傳\n{ isNewUser: true,\nisLoggedIn: true }"]
+
+        C2 -->|未登入| C11["handleGuestUserFingerprint()"]
+        C11 --> C12[("SELECT 全部指紋記錄")]
+        C12 --> C13["對每筆記錄計算\ncalculateMultiFingerprintSimilarity()"]
+        C13 --> C14["排序 → 取前 5 名\n相似度 ≥ 20% 才顯示"]
+        C14 --> C15{有相似結果?}
+        C15 -->|有| C16["回傳 topMatches\n訪客指紋不存入 DB"]
+        C15 -->|無| C17["回傳 similarity:0\n完全新訪客"]
+    end
+
+    subgraph ALGO["④ 相似度計算核心（加權演算法）"]
+        direction LR
+        D1["FingerprintJS 元件\n★ 40%\n重要×70% + 一般×30%"]
+        D2["Canvas 指紋\n★ 20%\n完全一致=100"]
+        D3["WebGL 指紋\n★ 15%\nrenderer/vendor"]
+        D4["音訊指紋\n★ 10%\nAudioContext hash"]
+        D5["字體指紋\n★ 10%\nJaccard 係數"]
+        D6["硬體指紋\n★ 5%\ncores/memory"]
+        D7["自訂指紋\n★ 5%\n螢幕/時區"]
+        D1 & D2 & D3 & D4 & D5 & D6 & D7 --> D8["加權平均\n→ 最終分數 0~100%"]
+    end
+
+    subgraph RESULT["⑤ 前端呈現結果"]
+        direction TB
+        E1{回應類型?}
+        E1 -->|isLoggedIn| E2["顯示：已登入用戶指紋更新\n標示是否有指紋變更"]
+        E1 -->|isGuest + 有相似| E3["顯示：前 5 名相似用戶\n含相似度百分比"]
+        E1 -->|isGuest + 無相似| E4["顯示：完全新訪客"]
+    end
+
+    subgraph AUTH["⑥ 登入 / 註冊流程（獨立）"]
+        direction LR
+        F1(["點擊「登入/註冊」"]) --> F2["GET /api/captcha\n生成數學題\n答案存入 session"]
+        F2 --> F3["填寫帳號密碼\n+ 驗證碼"]
+        F3 --> F4{驗證碼正確?}
+        F4 -->|否| F2
+        F4 -->|是，登入| F5["bcrypt.compare()\n驗證密碼"]
+        F5 --> F6["設定 session\nuserId / username"]
+        F4 -->|是，註冊| F7["bcrypt.hash()\n雜湊密碼"]
+        F7 --> F8[("INSERT INTO accounts")]
+    end
+
+    INIT --> COLLECT
+    B14 --> C1
+    C6 -.->|呼叫| D1
+    C13 -.->|呼叫| D1
+    D8 -.->|回傳分數| C6
+    D8 -.->|回傳分數| C13
+    C8 & C10 & C16 & C17 --> E1
+    AUTH -.->|登入後改變 session| A5
+
+    class A1,A2,A3,A4,A6,A7,A8,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,E1,E2,E3,E4,F1,F2,F3,F4,F5,F6,F7 frontend
+    class C1,C2,C3,C5,C8,C10,C11,C14,C15,C16,C17 backend
+    class C4,C7,C9,C12,F8 db
+    class D1,D2,D3,D4,D5,D6,D7,D8 algo
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#dbeafe;border:2px solid #3b82f6"></div> 前端（app.js）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#dcfce7;border:2px solid #22c55e"></div> 後端（server.js）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fef9c3;border:2px solid #eab308"></div> 資料庫（SQLite）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ede9fe;border:2px solid #8b5cf6"></div> 演算法</div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      fontSize: '14px'
+    },
+    flowchart: {
+      curve: 'basis',
+      padding: 20
+    }
+  });
+</script>
+</body>
+</html>
