@@ -902,6 +902,61 @@ header {
     }
 }
 
+/* 語言切換按鈕樣式 */
+.lang-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 15px;
+}
+
+.lang-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.lang-toggle:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.05);
+}
+
+.lang-toggle:active {
+    transform: scale(0.95);
+}
+
+.lang-toggle-text {
+    pointer-events: none;
+}
+
+[data-theme="dark"] .lang-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="dark"] .lang-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+    .lang-toggle-wrapper {
+        margin-right: 10px;
+    }
+
+    .lang-toggle {
+        font-size: 12px;
+        padding: 4px 10px;
+    }
+}
+
 /* 主題切換按鈕樣式 */
 .theme-toggle {
     position: fixed;

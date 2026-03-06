@@ -16,7 +16,7 @@ class MultiFingerprintApp {
     async init() {
         try {
             console.log('正在初始化多重指紋採集系統...');
-            this.updateStatus('正在載入指紋採集系統...', 'ready');
+            this.updateStatus(i18nManager.t('status.loading'), 'ready');
 
             this.initClientId();
             await this.loadFingerprintJS();
@@ -27,16 +27,16 @@ class MultiFingerprintApp {
 
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', () => {
-                    this.updateStatus('準備就緒，點擊「開始採集指紋」按鈕開始測試', 'ready');
+                    this.updateStatus(i18nManager.t('status.ready'), 'ready');
                     this.clearResults();
                 });
             } else {
-                this.updateStatus('準備就緒，點擊「開始採集指紋」按鈕開始測試', 'ready');
+                this.updateStatus(i18nManager.t('status.ready'), 'ready');
                 this.clearResults();
             }
         } catch (error) {
             console.error('多重指紋採集系統初始化失敗:', error);
-            this.showError('系統初始化失敗: ' + error.message);
+            this.showError(i18nManager.t('status.initFail') + error.message);
         }
     }
 
@@ -142,7 +142,7 @@ class MultiFingerprintApp {
     // 採集多重指紋
     async collectMultiFingerprint() {
         try {
-            this.updateStatus('正在採集多重指紋...', 'collecting');
+            this.updateStatus(i18nManager.t('status.collecting'), 'collecting');
             this.disableButton('collectBtn');
 
             const startTime = Date.now();
@@ -202,7 +202,7 @@ class MultiFingerprintApp {
             await this.sendMultiFingerprintToServer(fingerprintData);
         } catch (error) {
             console.error('多重指紋採集失敗:', error);
-            this.showError('指紋採集失敗: ' + error.message);
+            this.showError(i18nManager.t('status.collectFail') + error.message);
         } finally {
             this.enableButton('collectBtn');
         }
@@ -546,7 +546,7 @@ class MultiFingerprintApp {
 
             textIds.forEach(id => {
                 const el = document.getElementById(id);
-                if (el) el.textContent = '尚未採集';
+                if (el) el.textContent = i18nManager.t('result.notCollected');
             });
 
             const averageDuration = document.getElementById('averageDuration');
@@ -554,11 +554,11 @@ class MultiFingerprintApp {
 
             ['visitorId', 'confidence', 'version', 'collectionTime'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) el.textContent = '尚未採集';
+                if (el) el.textContent = i18nManager.t('result.notCollected');
             });
 
             const debugOutput = document.getElementById('debugOutput');
-            if (debugOutput) debugOutput.textContent = '準備採集...';
+            if (debugOutput) debugOutput.textContent = i18nManager.t('debug.ready');
         } catch (error) {
             console.error('重置系統資訊顯示失敗:', error);
         }
@@ -841,14 +841,14 @@ class MultiFingerprintApp {
                     this.updateStatus(result.message, 'new-user');
                 } else {
                     console.log('未知狀態:', result);
-                    this.updateStatus(result.message || '處理完成', 'ready');
+                    this.updateStatus(result.message || i18nManager.t('status.done'), 'ready');
                 }
             } else {
-                this.showError(result.error || '發送失敗');
+                this.showError(result.error || i18nManager.t('status.sendFail'));
             }
         } catch (error) {
             console.error('發送指紋資料失敗:', error);
-            this.showError('發送失敗: ' + error.message);
+            this.showError(i18nManager.t('status.sendFail') + error.message);
         }
     }
 
@@ -925,13 +925,13 @@ class MultiFingerprintApp {
     // 拒絕隱私聲明，取消採集
     disagreeToPrivacy() {
         this.closePrivacyModal();
-        this.updateStatus('已取消指紋採集', 'cancelled');
+        this.updateStatus(i18nManager.t('status.cancelled'), 'cancelled');
     }
 
     // 顯示認證彈出視窗
     showAuthModal() {
         this.showLoginForm();
-        document.getElementById('modalTitle').textContent = '用戶登入';
+        document.getElementById('modalTitle').textContent = i18nManager.t('auth.loginTitle');
         this.loadCaptcha('login');
         document.getElementById('authModal').classList.add('show');
         document.body.style.overflow = 'hidden';
@@ -1006,7 +1006,7 @@ class MultiFingerprintApp {
     showLoginForm() {
         document.getElementById('loginForm').style.display = 'block';
         document.getElementById('registerForm').style.display = 'none';
-        document.getElementById('modalTitle').textContent = '用戶登入';
+        document.getElementById('modalTitle').textContent = i18nManager.t('auth.loginTitle');
         this.loadCaptcha('login');
     }
 
@@ -1014,7 +1014,7 @@ class MultiFingerprintApp {
     showRegisterForm() {
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('registerForm').style.display = 'block';
-        document.getElementById('modalTitle').textContent = '用戶註冊';
+        document.getElementById('modalTitle').textContent = i18nManager.t('auth.registerTitle', 'User Registration');
         this.loadCaptcha('register');
     }
 
@@ -1026,7 +1026,7 @@ class MultiFingerprintApp {
         }
 
         this.resetSystemInfoDisplay();
-        this.updateStatus('準備就緒，點擊「開始採集指紋」按鈕開始測試', 'ready');
+        this.updateStatus(i18nManager.t('status.ready'), 'ready');
     }
 
     // 更新狀態列
@@ -1047,7 +1047,7 @@ class MultiFingerprintApp {
 
     // 顯示錯誤
     showError(message) {
-        this.updateStatus('錯誤: ' + message, 'error');
+        this.updateStatus(i18nManager.t('status.error') + message, 'error');
     }
 
     // 禁用採集按鈕
@@ -1055,7 +1055,7 @@ class MultiFingerprintApp {
         const button = document.getElementById(buttonId);
         if (button) {
             button.disabled = true;
-            button.textContent = '採集中...';
+            button.textContent = i18nManager.t('btn.collecting');
         }
     }
 
@@ -1064,7 +1064,7 @@ class MultiFingerprintApp {
         const button = document.getElementById(buttonId);
         if (button) {
             button.disabled = false;
-            button.textContent = '開始採集指紋';
+            button.textContent = i18nManager.t('btn.collect');
         }
     }
 
@@ -1118,7 +1118,7 @@ class MultiFingerprintApp {
             if (guestUserDisplay) guestUserDisplay.style.display = 'none';
             if (currentUserName) currentUserName.textContent = this.currentUser.username;
         } else {
-            userStatus.textContent = '未登入';
+            userStatus.textContent = i18nManager.t('status.notLoggedIn');
             userStatus.className = 'user-status ready';
             if (toggleAuthBtn) toggleAuthBtn.style.display = 'inline-block';
             if (logoutBtn) logoutBtn.style.display = 'none';
@@ -1135,12 +1135,12 @@ class MultiFingerprintApp {
         const rememberMe = document.getElementById('rememberMe').checked;
 
         if (!username || !password) {
-            this.showFormError('請輸入用戶名/Email 和密碼');
+            this.showFormError(i18nManager.t('auth.enterCredentials'));
             return;
         }
 
         if (!captcha) {
-            this.showFormError('請完成驗證碼');
+            this.showFormError(i18nManager.t('auth.enterCaptcha'));
             return;
         }
 
@@ -1157,15 +1157,15 @@ class MultiFingerprintApp {
                 this.currentUser = data.user;
                 this.updateUserDisplay();
                 this.closeAuthModal();
-                const rememberText = rememberMe ? '（已啟用記住我）' : '';
-                this.showSuccess(`歡迎回來，${data.user.username}！${rememberText}`);
+                const rememberText = rememberMe ? i18nManager.t('auth.rememberEnabled') : '';
+                this.showSuccess(i18nManager.t('auth.welcomeBack') + data.user.username + rememberText);
             } else {
-                this.showFormError(data.error || '登入失敗');
+                this.showFormError(data.error || i18nManager.t('auth.loginFail'));
                 this.loadCaptcha('login');
             }
         } catch (error) {
             console.error('登入失敗:', error);
-            this.showFormError('登入失敗: ' + error.message);
+            this.showFormError(i18nManager.t('auth.loginFail') + ': ' + error.message);
         }
     }
 
@@ -1178,35 +1178,35 @@ class MultiFingerprintApp {
         const captcha = document.getElementById('registerCaptcha').value;
 
         if (!username || !password) {
-            this.showFormError('請輸入用戶名和密碼');
+            this.showFormError(i18nManager.t('auth.enterUsernamePassword'));
             return;
         }
 
         if (username.length < 3) {
-            this.showFormError('用戶名至少需要 3 個字元');
+            this.showFormError(i18nManager.t('auth.usernameMinLength'));
             return;
         }
 
         if (password.length < 6) {
-            this.showFormError('密碼至少需要 6 個字元');
+            this.showFormError(i18nManager.t('auth.passwordMinLength'));
             return;
         }
 
         if (password !== confirmPassword) {
-            this.showFormError('兩次輸入的密碼不一致');
+            this.showFormError(i18nManager.t('auth.passwordMismatch'));
             return;
         }
 
         if (email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
-                this.showFormError('Email 格式不正確');
+                this.showFormError(i18nManager.t('auth.invalidEmail'));
                 return;
             }
         }
 
         if (!captcha) {
-            this.showFormError('請完成驗證碼');
+            this.showFormError(i18nManager.t('auth.enterCaptcha'));
             return;
         }
 
@@ -1220,7 +1220,7 @@ class MultiFingerprintApp {
             const data = await response.json();
 
             if (response.ok) {
-                this.showSuccess('註冊成功！正在為您登入...');
+                this.showSuccess(i18nManager.t('auth.registerSuccess'));
 
                 // 1.5 秒後關閉並開啟登入表單，預填用戶名
                 setTimeout(() => {
@@ -1230,12 +1230,12 @@ class MultiFingerprintApp {
                     this.showAuthModal();
                 }, 1500);
             } else {
-                this.showFormError(data.error || '註冊失敗');
+                this.showFormError(data.error || i18nManager.t('auth.registerFail'));
                 this.loadCaptcha('register');
             }
         } catch (error) {
             console.error('註冊失敗:', error);
-            this.showFormError('註冊失敗: ' + error.message);
+            this.showFormError(i18nManager.t('auth.registerFail') + ': ' + error.message);
         }
     }
 
@@ -1247,7 +1247,7 @@ class MultiFingerprintApp {
             if (response.ok) {
                 this.currentUser = null;
                 this.updateUserDisplay();
-                this.updateStatus('已登出', 'ready');
+                this.updateStatus(i18nManager.t('status.loggedOut'), 'ready');
             }
         } catch (error) {
             console.error('登出失敗:', error);

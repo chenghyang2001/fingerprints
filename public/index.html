@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FingerprintJS V4 指紋採集測試</title>
     <link rel="stylesheet" href="style.css">
-    
+
     <!-- FingerprintJS V4 多重載入方案 -->
     <script>
         // FingerprintJS 載入管理器
@@ -15,16 +15,16 @@
                 this.loading = false;
                 this.loadPromise = null;
             }
-            
+
             async load() {
                 if (this.loaded) return true;
                 if (this.loading) return this.loadPromise;
-                
+
                 this.loading = true;
                 this.loadPromise = this.tryLoadSources();
                 return this.loadPromise;
             }
-            
+
             async tryLoadSources() {
                 const sources = [
                     'lib/fingerprintjs.min.js', // 本地版本優先
@@ -32,11 +32,11 @@
                     'https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@4/dist/fp.min.js',
                     'https://unpkg.com/@fingerprintjs/fingerprintjs@4/dist/fp.min.js'
                 ];
-                
+
                 for (let i = 0; i < sources.length; i++) {
                     const src = sources[i];
                     console.log(`嘗試載入 FingerprintJS 來源 ${i + 1}/${sources.length}: ${src}`);
-                    
+
                     try {
                         await this.loadScript(src, 10000); // 10秒超時
                         if (typeof FingerprintJS !== 'undefined') {
@@ -49,10 +49,10 @@
                         continue;
                     }
                 }
-                
+
                 throw new Error('所有 FingerprintJS 載入來源都失敗');
             }
-            
+
             loadScript(src, timeout = 10000) {
                 return new Promise((resolve, reject) => {
                     const script = document.createElement('script');
@@ -60,28 +60,28 @@
                         script.remove();
                         reject(new Error(`載入超時: ${src}`));
                     }, timeout);
-                    
+
                     script.onload = () => {
                         clearTimeout(timeoutId);
                         resolve();
                     };
-                    
+
                     script.onerror = () => {
                         clearTimeout(timeoutId);
                         script.remove();
                         reject(new Error(`載入錯誤: ${src}`));
                     };
-                    
+
                     script.src = src;
                     script.crossOrigin = 'anonymous';
                     document.head.appendChild(script);
                 });
             }
         }
-        
+
         // 全域載入器實例
         window.fingerprintLoader = new FingerprintLoader();
-        
+
         // 檢查 FingerprintJS 載入狀態
         window.addEventListener('load', () => {
             console.log('頁面載入完成');
@@ -94,118 +94,123 @@
         <header>
             <div class="header-content">
                 <div class="title-section">
-                    <h1>FingerprintJS V4 指紋採集測試</h1>
-                    <p>使用專業級瀏覽器指紋識別技術</p>
+                    <h1 data-i18n="header.title">FingerprintJS V4 指紋採集測試</h1>
+                    <p data-i18n="header.subtitle">使用專業級瀏覽器指紋識別技術</p>
+                </div>
+                <div class="lang-toggle-wrapper">
+                    <button id="langToggle" class="lang-toggle" aria-label="Switch to English">
+                        <span class="lang-toggle-text" data-i18n="lang.toggle">EN</span>
+                    </button>
                 </div>
                 <div class="user-section" id="userSection">
                     <div id="currentUserDisplay" class="user-info" style="display: none;">
-                        <h4>目前使用者</h4>
+                        <h4 data-i18n="header.currentUser">目前使用者</h4>
                         <p id="currentUserName">--</p>
-                        <button id="logoutTopBtn" class="logout-btn">登出</button>
+                        <button id="logoutTopBtn" class="logout-btn" data-i18n="header.logoutTop">登出</button>
                     </div>
                     <div id="guestUserDisplay" class="guest-info">
-                        <p>未登入狀態</p>
+                        <p data-i18n="header.notLoggedIn">未登入狀態</p>
                     </div>
                 </div>
             </div>
         </header>
 
         <div class="user-status" id="userStatus">
-            <span id="userStatusText">準備採集指紋...</span>
+            <span id="userStatusText" data-i18n="status.preparingCollect">準備採集指紋...</span>
         </div>
 
         <div class="controls">
-            <button id="collectBtn" class="btn btn-primary">開始採集指紋</button>
-            <button id="clearBtn" class="btn btn-secondary">清除結果</button>
-            <button id="toggleAuthBtn" class="btn btn-secondary">用戶登入/註冊</button>
-            <button id="logoutBtn" class="btn btn-secondary" style="display: none;">登出</button>
+            <button id="collectBtn" class="btn btn-primary" data-i18n="btn.collect">開始採集指紋</button>
+            <button id="clearBtn" class="btn btn-secondary" data-i18n="btn.clear">清除結果</button>
+            <button id="toggleAuthBtn" class="btn btn-secondary" data-i18n="btn.auth">用戶登入/註冊</button>
+            <button id="logoutBtn" class="btn btn-secondary" style="display: none;" data-i18n="btn.logout">登出</button>
         </div>
 
         <div class="result-container">
-            <h2>採集到的指紋資料</h2>
-            
+            <h2 data-i18n="result.title">採集到的指紋資料</h2>
+
             <!-- FingerprintJS V4 結果 -->
             <div class="fingerprintjs-section">
-                <h3>FingerprintJS V4 結果</h3>
+                <h3 data-i18n="result.fpTitle">FingerprintJS V4 結果</h3>
                 <div class="detail-item">
-                    <label>訪客 ID:</label>
-                    <span id="visitorId">尚未採集</span>
+                    <label data-i18n="result.visitorId">訪客 ID:</label>
+                    <span id="visitorId" data-i18n="result.notCollected">尚未採集</span>
                 </div>
                 <div class="detail-item">
-                    <label>信心度:</label>
-                    <span id="confidence">尚未採集</span>
+                    <label data-i18n="result.confidence">信心度:</label>
+                    <span id="confidence" data-i18n="result.notCollected">尚未採集</span>
                 </div>
                 <div class="detail-item">
-                    <label>版本:</label>
-                    <span id="version">尚未採集</span>
+                    <label data-i18n="result.version">版本:</label>
+                    <span id="version" data-i18n="result.notCollected">尚未採集</span>
                 </div>
                 <div class="detail-item">
-                    <label>採集時間:</label>
-                    <span id="collectionTime">尚未採集</span>
+                    <label data-i18n="result.collectionTime">採集時間:</label>
+                    <span id="collectionTime" data-i18n="result.notCollected">尚未採集</span>
                 </div>
             </div>
 
             <!-- 系統資訊 -->
             <div class="system-info-section">
-                <h3>系統資訊</h3>
+                <h3 data-i18n="sys.title">系統資訊</h3>
                 <div class="detail-item">
-                    <label>使用者代理:</label>
-                    <span id="userAgent">尚未採集</span>
+                    <label data-i18n="sys.userAgent">使用者代理:</label>
+                    <span id="userAgent" data-i18n="result.notCollected">尚未採集</span>
                 </div>
                 <div class="detail-item">
-                    <label>螢幕解析度:</label>
-                    <span id="screenResolution">尚未採集</span>
+                    <label data-i18n="sys.screen">螢幕解析度:</label>
+                    <span id="screenResolution" data-i18n="result.notCollected">尚未採集</span>
                 </div>
                 <div class="detail-item">
-                    <label>瀏覽器視窗:</label>
-                    <span id="viewportSize">尚未採集</span>
+                    <label data-i18n="sys.viewport">瀏覽器視窗:</label>
+                    <span id="viewportSize" data-i18n="result.notCollected">尚未採集</span>
                 </div>
                 <div class="detail-item">
-                    <label>時區:</label>
-                    <span id="timezone">尚未採集</span>
+                    <label data-i18n="sys.timezone">時區:</label>
+                    <span id="timezone" data-i18n="result.notCollected">尚未採集</span>
                 </div>
                 <div class="detail-item">
-                    <label>語言偏好:</label>
-                    <span id="language">尚未採集</span>
+                    <label data-i18n="sys.language">語言偏好:</label>
+                    <span id="language" data-i18n="result.notCollected">尚未採集</span>
                 </div>
                 <div class="detail-item">
-                    <label>作業系統:</label>
-                    <span id="platform">尚未採集</span>
+                    <label data-i18n="sys.platform">作業系統:</label>
+                    <span id="platform" data-i18n="result.notCollected">尚未採集</span>
                 </div>
                 <div class="detail-item">
-                    <label>CPU 核心數:</label>
-                    <span id="hardwareConcurrency">尚未採集</span>
+                    <label data-i18n="sys.cores">CPU 核心數:</label>
+                    <span id="hardwareConcurrency" data-i18n="result.notCollected">尚未採集</span>
                 </div>
                 <div class="detail-item">
-                    <label>裝置記憶體:</label>
-                    <span id="deviceMemory">尚未採集</span>
+                    <label data-i18n="sys.memory">裝置記憶體:</label>
+                    <span id="deviceMemory" data-i18n="result.notCollected">尚未採集</span>
                 </div>
             </div>
 
             <!-- 元件詳細資料 -->
             <div class="components-section">
-                <h3>指紋元件詳細資料</h3>
+                <h3 data-i18n="comp.title">指紋元件詳細資料</h3>
                 <div class="detail-item">
-                    <label>元件總數:</label>
+                    <label data-i18n="comp.total">元件總數:</label>
                     <span id="totalComponents">0</span>
                 </div>
                 <div class="detail-item">
-                    <label>成功元件:</label>
+                    <label data-i18n="comp.success">成功元件:</label>
                     <span id="successfulComponents">0</span>
                 </div>
                 <div class="detail-item">
-                    <label>失敗元件:</label>
+                    <label data-i18n="comp.failed">失敗元件:</label>
                     <span id="failedComponents">0</span>
                 </div>
                 <div class="detail-item">
-                    <label>平均採集時間:</label>
+                    <label data-i18n="comp.avgTime">平均採集時間:</label>
                     <span id="averageDuration">0ms</span>
                 </div>
             </div>
 
             <!-- 元件列表 -->
             <div class="components-list">
-                <h3>元件列表</h3>
+                <h3 data-i18n="comp.listTitle">元件列表</h3>
                 <div id="componentsList" class="components-grid">
                     <!-- 元件將在這裡動態顯示 -->
                 </div>
@@ -213,8 +218,8 @@
 
             <!-- 調試資訊 -->
             <div class="debug-section">
-                <h3>調試資訊</h3>
-                <pre id="debugOutput">準備採集...</pre>
+                <h3 data-i18n="debug.title">調試資訊</h3>
+                <pre id="debugOutput" data-i18n="debug.ready">準備採集...</pre>
             </div>
         </div>
     </div>
@@ -223,14 +228,14 @@
     <div id="privacyModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>隱私聲明</h3>
+                <h3 data-i18n="privacy.title">隱私聲明</h3>
             </div>
             <div class="modal-body">
-                <p>本網頁為展示性測試，將臨時蒐集裝置與瀏覽器設定，不建立持久識別、不作行銷，保存不逾 24 小時，你是否同意？</p>
+                <p data-i18n="privacy.body">本網頁為展示性測試，將臨時蒐集裝置與瀏覽器設定，不建立持久識別、不作行銷，保存不逾 24 小時，你是否同意？</p>
             </div>
             <div class="modal-footer">
-                <button id="agreeBtn" class="btn btn-primary">同意</button>
-                <button id="disagreeBtn" class="btn btn-secondary">不同意</button>
+                <button id="agreeBtn" class="btn btn-primary" data-i18n="privacy.agree">同意</button>
+                <button id="disagreeBtn" class="btn btn-secondary" data-i18n="privacy.disagree">不同意</button>
             </div>
         </div>
     </div>
@@ -239,70 +244,70 @@
     <div id="authModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle">用戶登入</h3>
+                <h3 id="modalTitle" data-i18n="auth.loginTitle">用戶登入</h3>
                 <button id="closeModal" class="close-btn">&times;</button>
             </div>
-            
+
             <!-- 登入表單 -->
             <div class="auth-form" id="loginForm">
                 <div class="form-group">
-                    <label for="loginUsername">用戶名/Email：</label>
-                    <input type="text" id="loginUsername" placeholder="請輸入用戶名或 Email">
+                    <label for="loginUsername" data-i18n="auth.username">用戶名/Email：</label>
+                    <input type="text" id="loginUsername" data-i18n-placeholder="ph.loginUsername" placeholder="請輸入用戶名或 Email">
                 </div>
                 <div class="form-group">
-                    <label for="loginPassword">密碼：</label>
-                    <input type="password" id="loginPassword" placeholder="請輸入密碼">
+                    <label for="loginPassword" data-i18n="auth.password">密碼：</label>
+                    <input type="password" id="loginPassword" data-i18n-placeholder="ph.loginPassword" placeholder="請輸入密碼">
                 </div>
                 <div class="form-group">
-                    <label for="loginCaptcha">驗證碼：</label>
+                    <label for="loginCaptcha" data-i18n="auth.captcha">驗證碼：</label>
                     <div class="captcha-container">
-                        <span id="loginCaptchaQuestion">載入中...</span>
-                        <input type="number" id="loginCaptcha" placeholder="請輸入答案">
-                        <button type="button" id="refreshLoginCaptcha" class="btn btn-small">重新生成</button>
+                        <span id="loginCaptchaQuestion" data-i18n="auth.captchaLoading">載入中...</span>
+                        <input type="number" id="loginCaptcha" data-i18n-placeholder="ph.captcha" placeholder="請輸入答案">
+                        <button type="button" id="refreshLoginCaptcha" class="btn btn-small" data-i18n="auth.refreshCaptcha">重新生成</button>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="checkbox-label">
                         <input type="checkbox" id="rememberMe">
-                        <span>記住我（30 天）</span>
+                        <span data-i18n="auth.rememberMe">記住我（30 天）</span>
                     </label>
                 </div>
                 <div class="form-buttons">
-                    <button id="loginBtn" class="btn btn-primary">登入</button>
-                    <button id="showRegisterBtn" class="btn btn-secondary">註冊新帳號</button>
+                    <button id="loginBtn" class="btn btn-primary" data-i18n="auth.loginBtn">登入</button>
+                    <button id="showRegisterBtn" class="btn btn-secondary" data-i18n="auth.showRegister">註冊新帳號</button>
                 </div>
             </div>
 
             <!-- 註冊表單 -->
             <div class="auth-form" id="registerForm" style="display: none;">
                 <div class="form-group">
-                    <label for="registerUsername">用戶名：</label>
-                    <input type="text" id="registerUsername" placeholder="請輸入用戶名（必填）">
+                    <label for="registerUsername" data-i18n="auth.registerUsername">用戶名：</label>
+                    <input type="text" id="registerUsername" data-i18n-placeholder="ph.registerUsername" placeholder="請輸入用戶名（必填）">
                 </div>
                 <div class="form-group">
-                    <label for="registerEmail">Email：</label>
-                    <input type="email" id="registerEmail" placeholder="請輸入 Email（選填）">
-                    <small class="form-hint">可用於登入和找回密碼</small>
+                    <label for="registerEmail" data-i18n="auth.registerEmail">Email：</label>
+                    <input type="email" id="registerEmail" data-i18n-placeholder="ph.registerEmail" placeholder="請輸入 Email（選填）">
+                    <small class="form-hint" data-i18n="auth.registerEmailHint">可用於登入和找回密碼</small>
                 </div>
                 <div class="form-group">
-                    <label for="registerPassword">密碼：</label>
-                    <input type="password" id="registerPassword" placeholder="請輸入密碼（至少 6 個字元）">
+                    <label for="registerPassword" data-i18n="auth.registerPassword">密碼：</label>
+                    <input type="password" id="registerPassword" data-i18n-placeholder="ph.registerPassword" placeholder="請輸入密碼（至少 6 個字元）">
                 </div>
                 <div class="form-group">
-                    <label for="confirmPassword">確認密碼：</label>
-                    <input type="password" id="confirmPassword" placeholder="請再次輸入密碼">
+                    <label for="confirmPassword" data-i18n="auth.confirmPassword">確認密碼：</label>
+                    <input type="password" id="confirmPassword" data-i18n-placeholder="ph.confirmPassword" placeholder="請再次輸入密碼">
                 </div>
                 <div class="form-group">
-                    <label for="registerCaptcha">驗證碼：</label>
+                    <label for="registerCaptcha" data-i18n="auth.captcha">驗證碼：</label>
                     <div class="captcha-container">
-                        <span id="registerCaptchaQuestion">載入中...</span>
-                        <input type="number" id="registerCaptcha" placeholder="請輸入答案">
-                        <button type="button" id="refreshRegisterCaptcha" class="btn btn-small">重新生成</button>
+                        <span id="registerCaptchaQuestion" data-i18n="auth.captchaLoading">載入中...</span>
+                        <input type="number" id="registerCaptcha" data-i18n-placeholder="ph.captcha" placeholder="請輸入答案">
+                        <button type="button" id="refreshRegisterCaptcha" class="btn btn-small" data-i18n="auth.refreshCaptcha">重新生成</button>
                     </div>
                 </div>
                 <div class="form-buttons">
-                    <button id="registerBtn" class="btn btn-primary">註冊</button>
-                    <button id="showLoginBtn" class="btn btn-secondary">已有帳號，登入</button>
+                    <button id="registerBtn" class="btn btn-primary" data-i18n="auth.registerBtn">註冊</button>
+                    <button id="showLoginBtn" class="btn btn-secondary" data-i18n="auth.showLogin">已有帳號，登入</button>
                 </div>
             </div>
         </div>
@@ -313,6 +318,7 @@
         <span class="theme-toggle-icon">🌙</span>
     </button>
 
+    <script src="i18n.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
